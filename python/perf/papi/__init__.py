@@ -1,8 +1,23 @@
+"""
+PAPI (Performance API) library wrappers.
+
+See the [PAPI wiki](http://icl.cs.utk.edu/projects/papi/wiki/Main_Page) for
+details.
+"""
+
+# FIXME: It's rude to import the shared library (which might not be installed!)
+# at import time.
+
+#-------------------------------------------------------------------------------
+
 import ctypes
 
 #-------------------------------------------------------------------------------
 
-_lib = ctypes.CDLL("libpapi.so")
+try:
+    _lib = ctypes.CDLL("libpapi.so")
+except OSError:
+    raise RuntimeError("can't import libpapi.so; please install it")
 
 #-------------------------------------------------------------------------------
 # Constants
@@ -178,7 +193,8 @@ def _get_events(sort):
         if PAPI_enum_event(ctypes.byref(code), PAPI_ENUM_ALL) != PAPI_OK:
             break
 
-            
+
+# FIXME: Don't like.
 globals().update({ e.symbol.decode(): e for e in _get_events("native") })
 globals().update({ e.symbol.decode(): e for e in _get_events("preset") })
 
