@@ -67,6 +67,12 @@ def find_event_by_symbol(symbol):
 class Counters:
 
     def __init__(self, *events):
+        # Look up event names from strings, if needed.
+        events = tuple(
+            e if isinstance(e, api.EventInfo) else find_event_by_symbol(str(e))
+            for e in events
+        )
+
         self.__events = events
         num = len(self.__events)
         self.__num = ctypes.c_int(num)
