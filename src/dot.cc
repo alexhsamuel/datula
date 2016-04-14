@@ -42,6 +42,7 @@ main(
       std::cout << std::setw(10) << n << ": " 
                 << stats << " || " << stats / n
                 << std::endl;
+      // std::cout << to_json(stats) << std::endl;
     }
   }
     

@@ -9,7 +9,10 @@
 #include <sstream>
 #include <utility>
 
+#include "json.hh"
 #include "util.hh"
+
+using aslib::json::Json;
 
 //------------------------------------------------------------------------------
 
@@ -110,6 +113,21 @@ operator/(
   };
 }
 
+
+template<typename T>
+Json
+to_json(
+  SummaryStats<T> const& stats)
+{
+  auto json = Json::new_obj();
+  json["num_samples"] = Json((int) stats.num_samples);
+  json["min"] = stats.min;
+  json["max"] = stats.max;
+  json["mean"] = stats.mean;
+  json["standard_deviation"] = stats.standard_deviation;
+  return json;
+}
+  
 
 inline
 std::string

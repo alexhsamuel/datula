@@ -26,7 +26,7 @@ LDLIBS          =
 .PHONY: all
 all:			dot
 
-dot:	    	    	dot.o util.o
+dot:	    	    	dot.o util.o json.o
 
 # Use this target as a dependency to force another target to be rebuilt.
 .PHONY: force
