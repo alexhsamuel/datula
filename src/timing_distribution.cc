@@ -43,7 +43,7 @@ main(
   for (long i = 0; i < num; ++i) {
     if (thrash > 0)
       thrash_cache(thrash);
-    std::cout << time1(dot, size, arr0, arr1).first << std::endl;
+    std::cout << i << ',' << time1(dot, size, arr0, arr1).first << std::endl;
   }
     
   return EXIT_SUCCESS;
