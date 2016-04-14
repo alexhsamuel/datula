@@ -18,7 +18,7 @@ CXXFILT	    	= c++filt
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -S -o $@
 
 # Generate assembler for a C++ file, demangling C++ names.
-%.S:	    	    	%.cc force
+%.ss:	    	    	%.cc force
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -S -o - | $(CXXFILT) > $@
 
 # Link an executable. 
