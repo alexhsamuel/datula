@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <iomanip>
+#include <cmath>
 #include <unistd.h>
 
 #include "timing.hh"
