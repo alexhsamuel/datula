@@ -14,6 +14,9 @@
 
 using Elapsed = double;
 
+/*
+ * Invokes `fn(args...)`, and returns the elapsed time and return value.
+ */
 template<typename FN, typename ...ARGS>
 std::pair<Elapsed, std::result_of_t<FN&&(ARGS&&...)>>
 inline time1(
@@ -40,6 +43,9 @@ struct SummaryStats
 };
 
 
+/*
+ * Computes summary statistics over a number of sample values.
+ */
 template<typename ITER>
 auto
 summarize(
