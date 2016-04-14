@@ -28,6 +28,8 @@ all:			dot
 
 dot:	    	    	dot.o util.o json.o
 
+timing_distribution:	timing_distribution.o util.o
+
 # Use this target as a dependency to force another target to be rebuilt.
 .PHONY: force
 force: ;

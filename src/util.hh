@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 #include <utility>
 
 //------------------------------------------------------------------------------
@@ -21,6 +22,14 @@ no_inline(
 
 
 //------------------------------------------------------------------------------
+
+/*
+ * Parses a size.
+ *
+ * The size may be a bare integer, or an integer followed by a
+ * (case-insensitive) 'k', 'm', or 'g' suffix to indicate 1024-based scale.
+ */
+extern long parse_size(std::string const&);
 
 extern void thrash_cache(size_t);
 
