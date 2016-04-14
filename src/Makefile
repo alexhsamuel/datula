@@ -5,18 +5,23 @@ CXXFLAGS	= -O3 -g
 CXXFLAGS       += -Wall
 LDFLAGS	    	= 
 LDLIBS          = 
+CXXFILT	    	= c++filt
 
 #-------------------------------------------------------------------------------
 
-# How to compile a C++ file, and generate automatic dependencies.
+# Compile a C++ file, and generate automatic dependencies.
 %.o:	    	    	%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
-# How to generate assember for a C++ file.
+# Generate assembler for a C++ file.
 %.s:	    	    	%.cc force
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -S -o $@
 
-# How to link an executable. 
+# Generate assembler for a C++ file, demangling C++ names.
+%.S:	    	    	%.cc force
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -S -o - | $(CXXFILT) > $@
+
+# Link an executable. 
 %:  	    	    	%.o
 %:  	    	    	%.o 
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $^ $(LDLIBS) -o $@
@@ -28,7 +33,7 @@ all:			dot
 
 dot:	    	    	dot.o util.o json.o
 
-timing_distribution:	timing_distribution.o util.o
+timing_distribution:	timing_distribution.o util.o -lpapi
 
 # Use this target as a dependency to force another target to be rebuilt.
 .PHONY: force
