@@ -5,6 +5,8 @@
 
 //------------------------------------------------------------------------------
 
+template<typename T> T square(T val) { return val * val; }
+
 /*
  * Calls fn on args and returns the result, suppressing inlining.
  */

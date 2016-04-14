@@ -1,8 +1,11 @@
+#pragma once
+
 #include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
 #include <iostream>
+#include <unistd.h>
 #include <utility>
 
 #include "util.hh"
@@ -66,9 +69,6 @@ operator<<(
 
 
 //------------------------------------------------------------------------------
-
-template<typename T> T square(T val) { return val * val; }
-
 
 class Timeit
 {
@@ -142,26 +142,19 @@ private:
 
 //------------------------------------------------------------------------------
 
-#include <unistd.h>
-
-extern double dot(size_t, double const*, double const*);
-
+template<typename FN, typename ...ARGS>
 int
-main()
+timing_main(
+  int const argc,
+  char const* const* const argv,
+  FN&& fn,
+  ARGS&&... args)
 {
-  size_t const num = 1024 * 1024 * 1024;
-  double* const arr0 = new double[num];
-  double* const arr1 = new double[num];
-  for (size_t i = 0; i < num; ++i) {
-    arr0[i] = i + 1;
-    arr1[i] = 1.0 / (i + 1);
-  }
-
   Timeit timeit{16, 2};
 
   for (size_t i = 0; i < 30; ++i) {
     size_t const n = 1 << i;
-    auto const timing = timeit(dot, n, arr0, arr1);
+    auto const timing = timeit(fn, std::forward<ARGS>(args)...);
     std::cout << n << ": " << timing / n << std::endl;
   }
 
