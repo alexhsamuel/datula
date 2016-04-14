@@ -29,40 +29,44 @@ inline time1(
 
 //------------------------------------------------------------------------------
 
-struct Timing {
+template<typename T>
+struct SummaryStats
+{
   size_t num_samples;
-  Elapsed min;
-  Elapsed max;
-  Elapsed mean;
-  Elapsed standard_deviation;
+  T min;
+  T max;
+  T mean;
+  T standard_deviation;
 };
 
 
-inline Timing
+template<typename T>
+inline SummaryStats<T>
 operator/(
-  Timing const& timing,
+  SummaryStats<T> const& stats,
   size_t const scale)
 {
   return {
-    timing.num_samples,
-    timing.min / scale,
-    timing.max / scale,
-    timing.mean / scale,
-    timing.standard_deviation / scale
+    stats.num_samples,
+    stats.min / scale,
+    stats.max / scale,
+    stats.mean / scale,
+    stats.standard_deviation / scale
   };
 }
 
 
+template<typename T>
 inline std::ostream&
 operator<<(
   std::ostream& os,
-  Timing const& timing)
+  SummaryStats<T> const& stats)
 {
-  os << "num_samples=" << timing.num_samples
-     << " min=" << timing.min
-     << " max=" << timing.max
-     << " mean=" << timing.mean
-     << " standard_deviation=" << timing.standard_deviation;
+  os << "num=" << stats.num_samples
+     << " min=" << stats.min
+     << " max=" << stats.max
+     << " µ=" << stats.mean
+     << " σ=" << stats.standard_deviation;
 
   return os;
 }
@@ -90,7 +94,7 @@ public:
   }
 
   template<typename FN, typename ...ARGS>
-  inline Timing
+  inline SummaryStats<Elapsed>
   operator()(
     FN&& fn,
     ARGS&&... args)
@@ -106,7 +110,7 @@ public:
 
 private:
 
-  inline Timing
+  inline SummaryStats<Elapsed>
   calculate(
     std::vector<Elapsed>&& elapsed)
   {
