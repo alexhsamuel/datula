@@ -40,6 +40,34 @@ struct SummaryStats
 };
 
 
+template<typename ITER>
+auto
+summarize(
+  ITER begin,
+  ITER end)
+{
+  using Value = typename std::iterator_traits<ITER>::value_type;
+
+  // Compute moments.
+  size_t m0 = 0;
+  Value m1 = 0;
+  Value m2 = 0;
+  for (auto i = begin; i < end; ++i) {
+    m0 += 1;
+    m1 += *i;
+    m2 += *i * *i;
+  }
+
+  return SummaryStats<Value>{
+    m0,
+    *begin,
+    *(end - 1),
+    m1 / m0,
+    sqrt(m2 / m0 - square(m1 / m0)) * m0 / (m0 - 1)
+  };
+}
+
+
 template<typename T>
 inline SummaryStats<T>
 operator/(
@@ -118,24 +146,7 @@ private:
     std::sort(elapsed.begin(), elapsed.end());
     auto const begin = elapsed.begin() + num_discard_;
     auto const end   = elapsed.end()   - num_discard_;
-
-    // Compute moments.
-    size_t  m0 = 0;
-    Elapsed m1 = 0;
-    Elapsed m2 = 0;
-    for (auto i = begin; i < end; ++i) {
-      m0 += 1;
-      m1 += *i;
-      m2 += *i * *i;
-    }
-
-    return {
-      m0,
-      *begin,
-      *(end - 1),
-      m1 / m0,
-      sqrt(m2 / m0 - square(m1 / m0)) * m0 / (m0 - 1)
-    };
+    return summarize(begin, end);
   }
 
   size_t const num_samples_;
