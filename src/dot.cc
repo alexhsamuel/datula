@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <unistd.h>
 
 #include "timing.hh"
 
@@ -23,7 +24,7 @@ main(
   int const argc,
   char const* const* const argv)
 {
-  size_t const num = 32 * 1024 * 1024;
+  size_t const num = 1 << 25;
   double* const arr0 = new double[num];
   double* const arr1 = new double[num];
   for (size_t i = 0; i < num; ++i) {
@@ -31,5 +32,11 @@ main(
     arr1[i] = 1.0 / (i + 1);
   }
 
-  timing_main(argc, argv, dot, num, arr0, arr1);
+  Timer timer{1.0, 0.1, nullptr};
+  for (size_t s = 0; s < 26; ++s) 
+    std::cout << s << ": " << timer(dot, 1 << s, arr0, arr1) << std::endl;
+    
+  return EXIT_SUCCESS;
 }
+
+

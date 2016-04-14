@@ -4,15 +4,26 @@
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
+#include <iomanip>
 #include <iostream>
-#include <unistd.h>
+#include <sstream>
 #include <utility>
 
 #include "util.hh"
 
 //------------------------------------------------------------------------------
 
+using Clock = std::chrono::high_resolution_clock;
+using Timestamp = std::chrono::time_point<Clock>;
 using Elapsed = double;
+
+inline Elapsed
+time_since(
+  Timestamp const start)
+{
+  return std::chrono::duration<Elapsed>(Clock::now() - start).count();
+}
+
 
 /*
  * Invokes `fn(args...)`, and returns the elapsed time and return value.
@@ -23,9 +34,9 @@ inline time1(
   FN&& fn,
   ARGS&&... args)
 {
-  auto const start  = std::chrono::high_resolution_clock::now();
+  auto const start  = Clock::now();
   auto const result = fn(std::forward<ARGS>(args)...);
-  auto const end    = std::chrono::high_resolution_clock::now();
+  auto const end    = Clock::now();
   return {std::chrono::duration<Elapsed>(end - start).count(), result};
 }
 
@@ -66,8 +77,8 @@ summarize(
 
   return SummaryStats<Value>{
     m0,
-    *begin,
-    *(end - 1),
+    *begin,      // FIXME: Wrong!
+    *(end - 1),  // FIXME: Wrong!
     m1 / m0,
     sqrt(m2 / m0 - square(m1 / m0)) * m0 / (m0 - 1)
   };
@@ -90,17 +101,29 @@ operator/(
 }
 
 
+inline
+std::string
+format_ns(
+  Elapsed const elapsed)
+{
+  long const ns = (long) (elapsed * 1e9);
+  std::stringstream ss;
+  ss << std::setw(6) << ns << " ns";
+  return ss.str();
+}
+
+
 template<typename T>
 inline std::ostream&
 operator<<(
   std::ostream& os,
   SummaryStats<T> const& stats)
 {
-  os << "num=" << stats.num_samples
-     << " min=" << stats.min
-     << " max=" << stats.max
-     << " µ=" << stats.mean
-     << " σ=" << stats.standard_deviation;
+  os << "num=" << std::setw(6) << stats.num_samples
+     << " min=" << format_ns(stats.min)
+     << " max=" << format_ns(stats.max)
+     << " µ=" << format_ns(stats.mean)
+     << " σ=" << format_ns(stats.standard_deviation);
 
   return os;
 }
@@ -163,23 +186,55 @@ private:
 
 //------------------------------------------------------------------------------
 
-template<typename FN, typename ...ARGS>
-int
-timing_main(
-  int const argc,
-  char const* const* const argv,
-  FN&& fn,
-  ARGS&&... args)
+class Timer
 {
-  Timeit timeit{16, 2};
+public:
 
-  for (size_t i = 0; i < 30; ++i) {
-    size_t const n = 1 << i;
-    auto const timing = timeit(fn, std::forward<ARGS>(args)...);
-    std::cout << n << ": " << timing / n << std::endl;
+  using SetupFn = void (*)();
+
+  Timer(
+    Elapsed const time_budget,
+    double const discard_fraction=0,
+    SetupFn const setup=nullptr
+    )
+  : time_budget_(time_budget),
+    discard_fraction_(discard_fraction),
+    setup_(setup)
+  {
+    assert(time_budget > 0);
+    assert(discard_fraction >= 0);
   }
 
-  return EXIT_SUCCESS;
-}
+  template<typename FN, typename ...ARGS>
+  SummaryStats<Elapsed>
+  operator()(
+    FN&& fn,
+    ARGS&&... args)
+  {
+    std::vector<Elapsed> elapsed;
+
+    auto const start = Clock::now();
+    do {
+      if (setup_ != nullptr)
+        setup_();
+      elapsed.push_back(time1(fn, std::forward<ARGS>(args)...).first);
+    } while (time_since(start) < time_budget_);
+      
+    // Sort and ignore the highest and lowest.
+    std::sort(elapsed.begin(), elapsed.end());
+    size_t const num_discard = elapsed.size() * discard_fraction_ / 2;
+    auto const begin = elapsed.begin() + num_discard;
+    auto const end   = elapsed.end()   - num_discard;
+
+    return summarize(begin, end);
+  }
+
+private:
+
+  Elapsed const time_budget_;
+  double const discard_fraction_;
+  SetupFn const setup_;
+
+};
 
 
