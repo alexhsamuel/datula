@@ -12,7 +12,7 @@ LDLIBS          =
 %.o:	    	    	%.cc
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
-# How to generate assember for C++ files.
+# How to generate assember for a C++ file.
 %.s:	    	    	%.cc force
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -S -o $@
 
