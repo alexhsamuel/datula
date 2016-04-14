@@ -10,7 +10,7 @@ LDLIBS          =
 
 # How to compile a C++ file, and generate automatic dependencies.
 %.o:	    	    	%.cc
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CXX_DEPFLAGS) $< -c -o $@
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $< -c -o $@
 
 # How to generate assember for C++ files.
 %.s:	    	    	%.cc force
