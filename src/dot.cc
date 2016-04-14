@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <iomanip>
 #include <unistd.h>
 
 #include "timing.hh"
@@ -30,11 +31,31 @@ main(
   for (size_t i = 0; i < num; ++i) {
     arr0[i] = i + 1;
     arr1[i] = 1.0 / (i + 1);
-  }
+  }  
 
-  Timer timer{1.0, 0.1, nullptr};
-  for (size_t s = 0; s < 26; ++s) 
-    std::cout << s << ": " << timer(dot, 1 << s, arr0, arr1) << std::endl;
+  {
+    std::cout << "without cache flush:" << std::endl;
+    Timer timer{1.0, 0.1, nullptr};
+    for (size_t s = 0; s < 26; ++s) {
+      auto const n = 1 << s;
+      auto const stats = timer(dot, n, arr0, arr1);
+      std::cout << std::setw(10) << n << ": " 
+                << stats << " || " << stats / n
+                << std::endl;
+    }
+  }
+    
+  {
+    std::cout << "with cache flush:" << std::endl;
+    Timer timer{1.0, 0.1, []() { thrash_cache(6 * 1024 * 1024); }};
+    for (size_t s = 0; s < 26; ++s) {
+      auto const n = 1 << s;
+      auto const stats = timer(dot, n, arr0, arr1);
+      std::cout << std::setw(10) << n << ": " 
+                << stats << " || " << stats / n
+                << std::endl;
+    }
+  }
     
   return EXIT_SUCCESS;
 }

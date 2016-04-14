@@ -18,10 +18,19 @@ using Timestamp = std::chrono::time_point<Clock>;
 using Elapsed = double;
 
 inline Elapsed
+time_diff(
+  Timestamp const start,
+  Timestamp const end)
+{
+  return std::chrono::duration<Elapsed>(end - start).count();
+}
+
+
+inline Elapsed
 time_since(
   Timestamp const start)
 {
-  return std::chrono::duration<Elapsed>(Clock::now() - start).count();
+  return time_diff(start, Clock::now());
 }
 
 
@@ -29,6 +38,7 @@ time_since(
  * Invokes `fn(args...)`, and returns the elapsed time and return value.
  */
 template<typename FN, typename ...ARGS>
+__attribute((noinline))
 std::pair<Elapsed, std::result_of_t<FN&&(ARGS&&...)>>
 inline time1(
   FN&& fn,
@@ -37,7 +47,7 @@ inline time1(
   auto const start  = Clock::now();
   auto const result = fn(std::forward<ARGS>(args)...);
   auto const end    = Clock::now();
-  return {std::chrono::duration<Elapsed>(end - start).count(), result};
+  return {time_diff(start, end), result};
 }
 
 
@@ -106,82 +116,26 @@ std::string
 format_ns(
   Elapsed const elapsed)
 {
-  long const ns = (long) (elapsed * 1e9);
+  double const ns = elapsed * 1e9;
   std::stringstream ss;
-  ss << std::setw(6) << ns << " ns";
+  ss << std::setw(12) << std::setprecision(2) << std::fixed << ns << " ns";
   return ss.str();
 }
 
 
-template<typename T>
 inline std::ostream&
 operator<<(
   std::ostream& os,
-  SummaryStats<T> const& stats)
+  SummaryStats<Elapsed> const& stats)
 {
-  os << "num=" << std::setw(6) << stats.num_samples
-     << " min=" << format_ns(stats.min)
-     << " max=" << format_ns(stats.max)
-     << " µ=" << format_ns(stats.mean)
-     << " σ=" << format_ns(stats.standard_deviation);
-
+  os << "n=" << std::setw(4) << stats.num_samples
+     << " (" 
+     << std::setw(12) << std::setprecision(2) << std::fixed << stats.mean * 1e9 
+     << " ± " 
+     << std::setw(10) << std::setprecision(3) << stats.standard_deviation * 1e9
+     << ") ns";
   return os;
 }
-
-
-//------------------------------------------------------------------------------
-
-class Timeit
-{
-public:
-
-  /*
-   * @num_samples
-   *   The number of timing samples to use.
-   * @num_discard
-   *   The number of (each of) highest and lowest samples to discard.
-   */
-  Timeit(
-    size_t const num_samples,
-    size_t const num_discard=0)
-  : num_samples_(num_samples),
-    num_discard_(num_discard)
-  {
-    assert(num_samples_ > num_discard_ * 2);
-  }
-
-  template<typename FN, typename ...ARGS>
-  inline SummaryStats<Elapsed>
-  operator()(
-    FN&& fn,
-    ARGS&&... args)
-  {
-    std::vector<Elapsed> elapsed;
-    while (elapsed.size() < num_samples_) {
-      thrash_cache(64 * 1024 * 1024);  // FIXME
-      elapsed.push_back(time1(fn, std::forward<ARGS>(args)...).first);
-    }
-      
-    return calculate(std::move(elapsed));
-  }
-
-private:
-
-  inline SummaryStats<Elapsed>
-  calculate(
-    std::vector<Elapsed>&& elapsed)
-  {
-    // Sort and ignore the highest and lowest.
-    std::sort(elapsed.begin(), elapsed.end());
-    auto const begin = elapsed.begin() + num_discard_;
-    auto const end   = elapsed.end()   - num_discard_;
-    return summarize(begin, end);
-  }
-
-  size_t const num_samples_;
-  size_t const num_discard_;
-
-};
 
 
 //------------------------------------------------------------------------------
@@ -189,6 +143,8 @@ private:
 class Timer
 {
 public:
+
+  static size_t constexpr MAX_SAMPLES = 1024;
 
   using SetupFn = void (*)();
 
@@ -218,7 +174,7 @@ public:
       if (setup_ != nullptr)
         setup_();
       elapsed.push_back(time1(fn, std::forward<ARGS>(args)...).first);
-    } while (time_since(start) < time_budget_);
+    } while (elapsed.size() < MAX_SAMPLES && time_since(start) < time_budget_);
       
     // Sort and ignore the highest and lowest.
     std::sort(elapsed.begin(), elapsed.end());
