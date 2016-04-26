@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
@@ -150,7 +151,7 @@ operator<<(
      << " (" 
      << std::setw(12) << std::setprecision(2) << std::fixed << stats.mean * 1e9 
      << " ± " 
-     << std::setw(10) << std::setprecision(3) << stats.standard_deviation * 1e9
+     << std::setw(11) << std::setprecision(3) << stats.standard_deviation * 1e9
      << ") ns";
   return os;
 }

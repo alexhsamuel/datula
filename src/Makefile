@@ -33,7 +33,7 @@ all:			dot
 
 dot:	    	    	dot.o util.o json.o
 
-timing_distribution:	timing_distribution.o util.o -lpapi
+timing_distribution:	timing_distribution.o util.o # -lpapi
 
 # Use this target as a dependency to force another target to be rebuilt.
 .PHONY: force

@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <unistd.h>
 
-#include "papi.hh"
+// #include "papi.hh"
 #include "timing.hh"
 
 //------------------------------------------------------------------------------
@@ -41,25 +41,25 @@ main(
     arr1[i] = 1.0 / (i + 1);
   }  
 
-  // for (long i = 0; i < num; ++i) {
-  //   if (thrash > 0)
-  //     thrash_cache(thrash);
-  //   std::cout << i << ',' << time1(dot, size, arr0, arr1).first << std::endl;
-  // }
-    
-  PapiTimer timep;
-  timep.add(PAPI_L3_TCA).add(PAPI_L3_TCM);
-  std::cout << "i,PAPI_L3_TCA,PAPI_L3_TCM" << std::endl;
   for (long i = 0; i < num; ++i) {
     if (thrash > 0)
       thrash_cache(thrash);
-
-    auto const counters = timep(dot, size, arr0, arr1).first;
-    std::cout << i;
-    for (auto c : counters)
-      std::cout << ',' << c;
-    std::cout << std::endl;
+    std::cout << i << ',' << time1(dot, size, arr0, arr1).first << std::endl;
   }
+    
+//   PapiTimer timep;
+//   timep.add(PAPI_L3_TCA).add(PAPI_L3_TCM);
+//   std::cout << "i,PAPI_L3_TCA,PAPI_L3_TCM" << std::endl;
+//   for (long i = 0; i < num; ++i) {
+//     if (thrash > 0)
+//       thrash_cache(thrash);
+
+//     auto const counters = timep(dot, size, arr0, arr1).first;
+//     std::cout << i;
+//     for (auto c : counters)
+//       std::cout << ',' << c;
+//     std::cout << std::endl;
+//   }
 
   return EXIT_SUCCESS;
 }
